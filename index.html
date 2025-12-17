@@ -72,23 +72,32 @@ function addMessage(text, type) {
 // Greeting
 addMessage("Welcome 👋 How may I help you?", "bot");
 
-// Simple keyword dictionary
+// Expanded keyword dictionary
 const fuelKeywords = [
-  "fuel","petrol","diesel","dizel","petral","fual","tel","oil","paisa","payment"
+  "fuel","petrol","diesel","dizel","petral","fual",
+  "tel","oil","paisa","pesa","paise","payment",
+  "kam","nahi","aya","aaya"
 ];
 
 // Normalize text
 function normalize(text) {
-  return text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "");
 }
 
-// Detect intent
+// Detect intent with partial matching
 function detectIntent(text) {
-  let score = 0;
+  let matches = 0;
+
   fuelKeywords.forEach(word => {
-    if (text.includes(word)) score++;
+    if (text.includes(word)) {
+      matches++;
+    }
   });
-  return score >= 2 ? "Fuel claim related query" : null;
+
+  // Fuel intent if any strong signal exists
+  return matches >= 1 ? "Fuel claim related query" : null;
 }
 
 // PAC ID validation
@@ -102,7 +111,6 @@ input.addEventListener("keydown", function(e) {
     addMessage(userText, "user");
     input.value = "";
 
-    // Step 1: Intent detection
     if (step === "intent") {
       const cleanText = normalize(userText);
       const intent = detectIntent(cleanText);
@@ -122,7 +130,6 @@ input.addEventListener("keydown", function(e) {
       }
     }
 
-    // Step 2: PAC ID validation
     else if (step === "pac") {
       if (isValidPAC(userText)) {
         addMessage("✅ PAC ID accepted: " + userText.toLowerCase(), "bot");
@@ -138,6 +145,7 @@ input.addEventListener("keydown", function(e) {
   }
 });
 </script>
+
 
 </body>
 </html>
