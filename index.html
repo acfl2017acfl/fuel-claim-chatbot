@@ -2,59 +2,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Field Staff Help Bot</title>
+<title>ACFL Chatbot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #f4f6f8;
+    background: linear-gradient(135deg, #e85222, #ff7a45);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
   }
 
   .chatbox {
     background: #ffffff;
     width: 380px;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.15);
-    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  .header {
+    background: #e85222;
+    color: #ffffff;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header img {
+    height: 36px;
+    background: #ffffff;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: bold;
   }
 
   .messages {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 10px;
+    padding: 15px;
+    background: #fff7f3;
   }
 
   .bot, .user {
-    margin: 8px 0;
-    padding: 8px 10px;
-    border-radius: 8px;
+    margin: 10px 0;
+    padding: 10px 12px;
+    border-radius: 12px;
     max-width: 85%;
     white-space: pre-line;
+    font-size: 14px;
   }
 
   .bot {
-    background: #e8f0fe;
+    background: #ffffff;
+    border-left: 4px solid #e85222;
   }
 
   .user {
-    background: #dcf8c6;
+    background: #e85222;
+    color: #ffffff;
     margin-left: auto;
     text-align: right;
   }
 
   input {
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    width: 100%;
+    padding: 14px;
+    border: none;
+    border-top: 1px solid #ddd;
     font-size: 14px;
+    outline: none;
+  }
+
+  input::placeholder {
+    color: #999;
   }
 </style>
 </head>
@@ -62,8 +92,13 @@
 <body>
 
 <div class="chatbox">
+  <div class="header">
+    <img src="ACFL Logo PNG WhiteBG.png" alt="ACFL Logo">
+    <div class="header-title">ACFL Chatbot</div>
+  </div>
+
   <div class="messages" id="messages"></div>
-  <input type="text" id="input" placeholder="Type your query..." autocomplete="off">
+  <input type="text" id="input" placeholder="Type your query here..." autocomplete="off">
 </div>
 
 <script>
@@ -73,7 +108,6 @@ const input = document.getElementById("input");
 let step = "intent";
 let detectedIntent = "";
 
-// Utility: add message
 function addMessage(text, type) {
   const div = document.createElement("div");
   div.className = type;
@@ -83,9 +117,9 @@ function addMessage(text, type) {
 }
 
 // Greeting
-addMessage("Welcome 👋\nHow may I help you?", "bot");
+addMessage("Welcome to ACFL Chatbot 👋\nHow may I help you today?", "bot");
 
-// Keyword dictionaries
+// Keywords
 const fuelKeywords = [
   "fuel","petrol","diesel","dizel","petral","fual",
   "tel","oil","paisa","pesa","paise","payment",
@@ -97,12 +131,10 @@ const incentiveKeywords = [
   "commission","target","payout","earning"
 ];
 
-// Normalize text
 function normalize(text) {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
 }
 
-// Intent detection
 function detectIntent(text) {
   let fuelMatch = 0;
   let incentiveMatch = 0;
@@ -121,12 +153,10 @@ function detectIntent(text) {
   return null;
 }
 
-// PAC ID validation
 function isValidPAC(pac) {
   return /^pac\d{6}$/i.test(pac);
 }
 
-// Input handler
 input.addEventListener("keydown", function(e) {
   if (e.key === "Enter" && input.value.trim() !== "") {
 
@@ -134,7 +164,6 @@ input.addEventListener("keydown", function(e) {
     addMessage(userText, "user");
     input.value = "";
 
-    // STEP 1: Understand query
     if (step === "intent") {
       const cleanText = normalize(userText);
       const intent = detectIntent(cleanText);
@@ -145,21 +174,18 @@ input.addEventListener("keydown", function(e) {
         addMessage("Please enter your PAC ID (Example: pac001617)", "bot");
         step = "pac";
       }
-
       else if (intent === "INCENTIVE") {
         detectedIntent = "Incentive related query";
         addMessage("I understood your query as:\n✔ Incentive related query", "bot");
         addMessage("Please enter your PAC ID (Example: pac001617)", "bot");
         step = "pac";
       }
-
       else if (intent === "AMBIGUOUS") {
         addMessage(
           "Your query seems related to more than one topic.\nPlease specify:\n1️⃣ Fuel\n2️⃣ Incentive",
           "bot"
         );
       }
-
       else {
         addMessage(
           "Sorry, I could not understand your query.\nPlease try again.",
@@ -167,8 +193,6 @@ input.addEventListener("keydown", function(e) {
         );
       }
     }
-
-    // STEP 2: PAC ID validation
     else if (step === "pac") {
       if (isValidPAC(userText)) {
         addMessage("✅ PAC ID accepted: " + userText.toLowerCase(), "bot");
