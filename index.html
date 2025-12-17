@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fuel Claim Chatbot (Sample)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .chatbox {
+    background: #fff;
+    width: 360px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 15px;
+  }
+  .messages {
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+  .bot, .user {
+    margin: 8px 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    max-width: 85%;
+  }
+  .bot {
+    background: #e8f0fe;
+  }
+  .user {
+    background: #dcf8c6;
+    margin-left: auto;
+    text-align: right;
+  }
+  input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="chatbox">
+  <div class="messages" id="messages"></div>
+  <input type="text" id="input" placeholder="Type here..." autocomplete="off">
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
+
+let step = "intent";
+
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.className = type;
+  div.innerText = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Greeting
+addMessage("Welcome 👋 How may I help you?", "bot");
+
+// Simple keyword dictionary
+const fuelKeywords = [
+  "fuel","petrol","diesel","dizel","petral","fual","tel","oil","paisa","payment"
+];
+
+// Normalize text
+function normalize(text) {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+}
+
+// Detect intent
+function detectIntent(text) {
+  let score = 0;
+  fuelKeywords.forEach(word => {
+    if (text.includes(word)) score++;
+  });
+  return score >= 2 ? "Fuel claim related query" : null;
+}
+
+// PAC ID validation
+function isValidPAC(pac) {
+  return /^pac\d{6}$/i.test(pac);
+}
+
+input.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && input.value.trim() !== "") {
+    const userText = input.value.trim();
+    addMessage(userText, "user");
+    input.value = "";
+
+    // Step 1: Intent detection
+    if (step === "intent") {
+      const cleanText = normalize(userText);
+      const intent = detectIntent(cleanText);
+
+      if (intent) {
+        addMessage(
+          "I understood your query as:\n\n✔ " + intent,
+          "bot"
+        );
+        addMessage("Please enter your PAC ID (Example: pac001617)", "bot");
+        step = "pac";
+      } else {
+        addMessage(
+          "Sorry, I could not understand. Please describe your issue again.",
+          "bot"
+        );
+      }
+    }
+
+    // Step 2: PAC ID validation
+    else if (step === "pac") {
+      if (isValidPAC(userText)) {
+        addMessage("✅ PAC ID accepted: " + userText.toLowerCase(), "bot");
+        addMessage("Thank you. Backend calculation will be done here later.", "bot");
+        step = "done";
+      } else {
+        addMessage(
+          "❌ Invalid PAC ID format.\nPlease enter again (Example: pac001617)",
+          "bot"
+        );
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
