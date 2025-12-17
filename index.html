@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ACFL Chatbot</title>
+<title>Shreya</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -55,7 +55,6 @@
     background: #f7f7f7;
   }
 
-  /* COMMON BUBBLE STYLE (SAME FOR BOTH) */
   .bubble {
     margin: 10px 0;
     padding: 12px 14px;
@@ -66,13 +65,11 @@
     color: #ffffff;
   }
 
-  /* SYSTEM / BOT */
   .bot {
     background: #e85222;
     text-align: left;
   }
 
-  /* USER */
   .user {
     background: #2e7d32;
     margin-left: auto;
@@ -100,10 +97,6 @@
     font-size: 14px;
     cursor: pointer;
   }
-
-  .input-area button:hover {
-    background: #cf4a1f;
-  }
 </style>
 </head>
 
@@ -112,13 +105,13 @@
 <div class="chatbox">
   <div class="header">
     <img src="ACFL Logo PNG WhiteBG.png" alt="ACFL Logo">
-    <div class="header-title">ACFL Chatbot</div>
+    <div class="header-title">Shreya</div>
   </div>
 
   <div class="messages" id="messages"></div>
 
   <div class="input-area">
-    <input type="text" id="input" placeholder="Type your query here..." autocomplete="off">
+    <input type="text" id="input" placeholder="Type here..." autocomplete="off">
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
@@ -127,8 +120,8 @@
 const messages = document.getElementById("messages");
 const input = document.getElementById("input");
 
-let step = "intent";
-let detectedIntent = "";
+let step = "pac";
+let storedPAC = "";
 
 function addMessage(text, type) {
   const div = document.createElement("div");
@@ -139,71 +132,53 @@ function addMessage(text, type) {
 }
 
 // Greeting
-addMessage("Welcome to ACFL Chatbot 👋\n I am Shreya, your HR Assistant \n How may I help you today?", "bot");
+addMessage("Hi 👋 I’m Shreya.\nPlease enter your PAC ID (Example: PAC001617)", "bot");
 
-// Keywords
-const fuelKeywords = [
-  "fuel","petrol","diesel","dizel","petral","fual",
-  "tel","oil","paisa","pesa","paise","payment",
-  "km","travel"
-];
-
-const incentiveKeywords = [
-  "incentive","insentive","bonus","variable",
-  "commission","target","payout","earning"
-];
-
-function normalize(text) {
-  return text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
-}
-
-function detectIntent(text) {
-  let fuel = 0;
-  let incentive = 0;
-
-  fuelKeywords.forEach(w => { if (text.includes(w)) fuel++; });
-  incentiveKeywords.forEach(w => { if (text.includes(w)) incentive++; });
-
-  if (fuel > 0 && incentive > 0) return "AMBIGUOUS";
-  if (fuel > 0) return "FUEL";
-  if (incentive > 0) return "INCENTIVE";
-  return null;
-}
-
+// PAC validation
 function isValidPAC(pac) {
   return /^pac\d{6}$/i.test(pac);
 }
 
-function processInput(userText) {
-  addMessage(userText, "user");
+// Password generator
+function generatePassword(pac) {
+  const digits = pac.slice(-4).split("").map(Number);
+  const [d1,d2,d3,d4] = digits;
 
-  if (step === "intent") {
-    const intent = detectIntent(normalize(userText));
+  const letters = [
+    String.fromCharCode(65 + (d1*2)),
+    String.fromCharCode(65 + (d2*1)),
+    String.fromCharCode(65 + (d3*2)),
+    String.fromCharCode(65 + (d4*1))
+  ].join("");
 
-    if (intent === "FUEL") {
-      detectedIntent = "Fuel claim related query";
-      addMessage("Fuel claim related query identified.\nPlease enter your PAC ID (Example: pac001617)", "bot");
-      step = "pac";
-    }
-    else if (intent === "INCENTIVE") {
-      detectedIntent = "Incentive related query";
-      addMessage("Incentive related query identified.\nPlease enter your PAC ID (Example: pac001617)", "bot");
-      step = "pac";
-    }
-    else if (intent === "AMBIGUOUS") {
-      addMessage("Your query relates to multiple topics.\nPlease specify:\n1️⃣ Fuel\n2️⃣ Incentive", "bot");
-    }
-    else {
-      addMessage("Sorry, I could not understand your query.\nPlease try again.", "bot");
+  const S = d1 + d2 + d3 + d4;
+  const diff = 2017 - S;
+  const tens = Math.floor(diff / 10) % 10;
+  const units = diff % 10;
+  const sUnit = S % 10;
+
+  return letters + tens + units + sUnit;
+}
+
+function processInput(text) {
+  addMessage(text, "user");
+
+  if (step === "pac") {
+    if (isValidPAC(text)) {
+      storedPAC = text.toUpperCase();
+      addMessage("PAC ID accepted.\nPlease enter your password.", "bot");
+      step = "password";
+    } else {
+      addMessage("Invalid PAC ID format.\nPlease re-enter (Example: PAC001617)", "bot");
     }
   }
-  else if (step === "pac") {
-    if (isValidPAC(userText)) {
-      addMessage("PAC ID accepted: " + userText.toLowerCase(), "bot");
-      addMessage(detectedIntent + "\nThis will be processed further.", "bot");
+  else if (step === "password") {
+    const correctPassword = generatePassword(storedPAC);
+    if (text === correctPassword) {
+      addMessage("✅ Login successful.\nWelcome!", "bot");
       step = "done";
     } else {
-      addMessage("Invalid PAC ID format.\nPlease enter again (Example: pac001617)", "bot");
+      addMessage("❌ Wrong password.\nPlease try again.", "bot");
     }
   }
 }
@@ -216,7 +191,7 @@ function sendMessage() {
   }
 }
 
-input.addEventListener("keydown", function(e) {
+input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
 </script>
