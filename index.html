@@ -1,3 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Field Staff Help Bot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .chatbox {
+    background: #ffffff;
+    width: 380px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+
+  .bot, .user {
+    margin: 8px 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    max-width: 85%;
+    white-space: pre-line;
+  }
+
+  .bot {
+    background: #e8f0fe;
+  }
+
+  .user {
+    background: #dcf8c6;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  input {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="chatbox">
+  <div class="messages" id="messages"></div>
+  <input type="text" id="input" placeholder="Type your query..." autocomplete="off">
+</div>
+
 <script>
 const messages = document.getElementById("messages");
 const input = document.getElementById("input");
@@ -5,6 +73,7 @@ const input = document.getElementById("input");
 let step = "intent";
 let detectedIntent = "";
 
+// Utility: add message
 function addMessage(text, type) {
   const div = document.createElement("div");
   div.className = type;
@@ -14,7 +83,7 @@ function addMessage(text, type) {
 }
 
 // Greeting
-addMessage("Welcome 👋 How may I help you?", "bot");
+addMessage("Welcome 👋\nHow may I help you?", "bot");
 
 // Keyword dictionaries
 const fuelKeywords = [
@@ -33,7 +102,7 @@ function normalize(text) {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
 }
 
-// Detect intent
+// Intent detection
 function detectIntent(text) {
   let fuelMatch = 0;
   let incentiveMatch = 0;
@@ -49,7 +118,6 @@ function detectIntent(text) {
   if (fuelMatch > 0 && incentiveMatch > 0) return "AMBIGUOUS";
   if (fuelMatch > 0) return "FUEL";
   if (incentiveMatch > 0) return "INCENTIVE";
-
   return null;
 }
 
@@ -58,49 +126,54 @@ function isValidPAC(pac) {
   return /^pac\d{6}$/i.test(pac);
 }
 
+// Input handler
 input.addEventListener("keydown", function(e) {
   if (e.key === "Enter" && input.value.trim() !== "") {
+
     const userText = input.value.trim();
     addMessage(userText, "user");
     input.value = "";
 
-    // Step 1: Intent detection
+    // STEP 1: Understand query
     if (step === "intent") {
       const cleanText = normalize(userText);
       const intent = detectIntent(cleanText);
 
       if (intent === "FUEL") {
         detectedIntent = "Fuel claim related query";
-        addMessage("I understood your query as:\n\n✔ Fuel claim related query", "bot");
+        addMessage("I understood your query as:\n✔ Fuel claim related query", "bot");
         addMessage("Please enter your PAC ID (Example: pac001617)", "bot");
         step = "pac";
       }
+
       else if (intent === "INCENTIVE") {
         detectedIntent = "Incentive related query";
-        addMessage("I understood your query as:\n\n✔ Incentive related query", "bot");
+        addMessage("I understood your query as:\n✔ Incentive related query", "bot");
         addMessage("Please enter your PAC ID (Example: pac001617)", "bot");
         step = "pac";
       }
+
       else if (intent === "AMBIGUOUS") {
         addMessage(
-          "Your query seems related to multiple topics. Please choose one:\n1️⃣ Fuel\n2️⃣ Incentive",
+          "Your query seems related to more than one topic.\nPlease specify:\n1️⃣ Fuel\n2️⃣ Incentive",
           "bot"
         );
       }
+
       else {
         addMessage(
-          "Sorry, I could not understand. Please describe your issue again.",
+          "Sorry, I could not understand your query.\nPlease try again.",
           "bot"
         );
       }
     }
 
-    // Step 2: PAC ID validation
+    // STEP 2: PAC ID validation
     else if (step === "pac") {
       if (isValidPAC(userText)) {
         addMessage("✅ PAC ID accepted: " + userText.toLowerCase(), "bot");
         addMessage(
-          "Thank you. " + detectedIntent + " will be processed here later.",
+          "Thank you.\n" + detectedIntent + " will be processed here later.",
           "bot"
         );
         step = "done";
@@ -114,3 +187,6 @@ input.addEventListener("keydown", function(e) {
   }
 });
 </script>
+
+</body>
+</html>
